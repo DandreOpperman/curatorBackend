@@ -8,5 +8,9 @@
     "dotenv": "^16.4.7",
     "pg": "^8.14.0",
     "pg-format": "^1.0.4"
+  },
+  "scripts": {
+    "setup-dbs": "psql -f ./database/setup.sql",
+    "seed": "node ./database/seed/run-seed.js"
   }
 }
