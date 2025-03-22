@@ -2,7 +2,7 @@ const format = require("pg-format");
 const db = require("../connection");
 const { convertTimestampToDate } = require("../utils");
 
-const seed = ({ userData, itemData, favoriteData, galleryData }) => {
+const seed = ({ userData, favoriteData, galleryData }) => {
   return db
     .query(`DROP EXTENSION IF EXISTS pgcrypto CASCADE;`)
     .then(() => {
@@ -10,9 +10,6 @@ const seed = ({ userData, itemData, favoriteData, galleryData }) => {
     })
     .then(() => {
       return db.query(`DROP TABLE IF EXISTS favorites;`);
-    })
-    .then(() => {
-      return db.query(`DROP TABLE IF EXISTS items;`);
     })
     .then(() => {
       return db.query(`DROP TABLE IF EXISTS users;`);
@@ -28,18 +25,6 @@ const seed = ({ userData, itemData, favoriteData, galleryData }) => {
         email VARCHAR(400) NOT NULL,
         password VARCHAR(500) NOT NULL,
         avatar_url VARCHAR(500) DEFAULT 'https://cdn-icons-png.flaticon.com/512/6097/6097300.png'
-      );`);
-    })
-    .then(() => {
-      return db.query(`
-      CREATE TABLE items (
-        item_id SERIAL PRIMARY KEY,
-        name VARCHAR(400) NOT NULL,
-        creator VARCHAR(400) NOT NULL,
-        image_url VARCHAR(500) NOT NULL,
-        description VARCHAR(500) NOT NULL,
-        year_date integer CHECK (year_date > -1 and year_date < 2026),
-        year_BCE integer CHECK (year_BCE = 0 or year_BCE = 1)
       );`);
     })
     .then(() => {
@@ -73,22 +58,6 @@ const seed = ({ userData, itemData, favoriteData, galleryData }) => {
         ])
       );
       return db.query(insertUserQueryStr);
-    })
-    .then(() => {
-      const insertItemQueryStr = format(
-        "INSERT INTO items (name, creator, image_url, description, year_date, year_BCE) VALUES %L;",
-        itemData.map(
-          ({ name, creator, image_url, description, year_date, year_BCE }) => [
-            name,
-            creator,
-            image_url,
-            description,
-            year_date,
-            year_BCE,
-          ]
-        )
-      );
-      return db.query(insertItemQueryStr);
     })
     .then(() => {
       const insertFavoriteQueryStr = format(

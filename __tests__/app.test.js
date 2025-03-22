@@ -54,22 +54,22 @@ describe("/api/user/:user_id", () => {
           galleries: [],
         });
       });
-    it("GET:404 sends an appropriate status and error message when given a valid but non-existent id", () => {
-      return request(app)
-        .get("/api/user/999")
-        .expect(404)
-        .then(({ body: { msg } }) => {
-          expect(msg).toBe("NOT FOUND");
-        });
-    });
-    it("GET:400 sends an appropriate status and error message when given an invalid id", () => {
-      return request(app)
-        .get("/api/user/jhvkjhbkh")
-        .expect(400)
-        .then(({ body: { msg } }) => {
-          expect(msg).toBe("BAD REQUEST");
-        });
-    });
+  });
+  it("GET:404 sends an appropriate status and error message when given a valid but non-existent id", () => {
+    return request(app)
+      .get("/api/user/999")
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("NOT FOUND");
+      });
+  });
+  it("GET:400 sends an appropriate status and error message when given an invalid id", () => {
+    return request(app)
+      .get("/api/user/jhvkjhbkh")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("BAD REQUEST");
+      });
   });
   it("PATCH:201 responds with the edited user", () => {
     const newEmail = { email: "whopper@gmail.com" };
@@ -223,6 +223,7 @@ describe("/api/user/:user_id", () => {
       });
   });
 });
+
 describe("/api/user", () => {
   it("POST:201 responds with the newly created user", () => {
     const requestBody = {
@@ -333,6 +334,154 @@ describe("/api/user", () => {
       .send(requestBody)
       .then(({ body: { msg } }) => {
         expect(msg).toBe("EMAIL TAKEN");
+      });
+  });
+});
+
+describe("/api/user/:user_id/favorites", () => {
+  it("GET:200 responds with an array of all of the users favorites", () => {
+    return request(app)
+      .get("/api/user/1/favorites")
+      .expect(200)
+      .then(({ body: { favorites } }) => {
+        favorites.map((favorite) => {
+          expect(favorite).toMatchObject({
+            user_id: 1,
+            favorite_id: expect.any(Number),
+            item_id: expect.any(Number),
+          });
+        });
+      });
+  });
+  it("GET:200 responds with an empty array if user has no favorites yet", () => {
+    return request(app)
+      .get("/api/user/3/favorites")
+      .expect(200)
+      .then(({ body: { favorites } }) => {
+        expect(Array.isArray(favorites)).toBe(true);
+        expect(favorites.length).toBe(0);
+      });
+  });
+  it("GET:404 sends an appropriate status and error message when given a valid but non-existent id ", () => {
+    return request(app)
+      .get("/api/user/999999/favorites")
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("NOT FOUND");
+      });
+  });
+  it("GET:400 sends an appropriate status and error message when given an invalid id", () => {
+    return request(app)
+      .get("/api/user/wljkfn/favorites")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("BAD REQUEST");
+      });
+  });
+  it("POST:201 responds with the newly created favorite, and ignores additional properties", () => {
+    const requestBody = {
+      item_id: 2,
+    };
+    return request(app)
+      .post("/api/user/3/favorites")
+      .expect(201)
+      .send(requestBody)
+      .then(({ body: { favorite } }) => {
+        expect(favorite).toMatchObject({
+          user_id: 3,
+          item_id: 2,
+        });
+      });
+  });
+  it("POST:400 sends an appropriate status and error message when given an invalid id", () => {
+    const requestBody = {
+      name: "rent",
+      cost: 500,
+    };
+    return request(app)
+      .post("/api/user/wljkfn/favorites")
+      .expect(400)
+      .send(requestBody)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("BAD REQUEST");
+      });
+  });
+  it("POST:400 responds with appropriate error message if bad request body", () => {
+    const requestBody = {
+      email: "marki55@gmail.com",
+      password: "Jwisper5$",
+      fname: "Marko",
+      banana: true,
+      giveMoney: "yes",
+      income: 10000000000,
+    };
+    return request(app)
+      .post("/api/user/1/favorites")
+      .expect(400)
+      .send(requestBody)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("BAD REQUEST");
+      });
+  });
+  it("POST:404 sends an appropriate status and error message when given a valid but non-existant user_id", () => {
+    const requestBody = {
+      item_id: 4,
+    };
+    return request(app)
+      .post("/api/user/999/favorites")
+      .expect(404)
+      .send(requestBody)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("NOT FOUND");
+      });
+  });
+});
+describe("/api/user/:user_id/favorites/:favorites_id", () => {
+  it("DELETE:204 deletes the specified favorite", () => {
+    return request(app)
+      .delete("/api/user/1/favorites/1")
+      .expect(204)
+      .then(() => {
+        return request(app).get("/api/user/1/favorites").expect(200);
+      })
+      .then(({ body: { favorites } }) => {
+        expect(favorites).toMatchObject([
+          { favorite_id: 2, item_id: 2, user_id: 1 },
+        ]);
+      });
+  });
+  it("DELETE:400 responds with bad request for an invalid user_id", () => {
+    return request(app)
+      .delete("/api/user/imnotarealuser/favorites/1")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("BAD REQUEST");
+      });
+  });
+  it("DELETE:404 responds with bad request for a valid but non existant user_id", () => {
+    return request(app)
+      .delete("/api/user/12345/favorites/1")
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("NOT FOUND");
+      });
+  });
+});
+describe("/api/galleries", () => {
+  it("GET:200 responds with an array of all of the gallery objects", () => {
+    return request(app)
+      .get("/api/galleries")
+      .expect(200)
+      .then(({ body: { galleries } }) => {
+        galleries.map((gallery) => {
+          expect(gallery).toMatchObject({
+            gallery_id: expect.any(Number),
+            created_at: expect.any(Number),
+            image_url: expect.any(String),
+            title: expect.any(String),
+            description: expect.any(String),
+            user_id: expect.any(Number),
+          });
+        });
       });
   });
 });

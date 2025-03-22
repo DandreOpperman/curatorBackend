@@ -14,8 +14,8 @@
     "supertest": "^7.1.0"
   },
   "scripts": {
-    "setup-dbs": "psql -f ./database/setup.sql",
-    "seed": "node ./database/seed/run-seed.js",
+    "setup-dbs": "psql -f ./db/setup.sql",
+    "seed": "node ./db/seed/run-seed.js",
     "test": "jest"
   }
 }
