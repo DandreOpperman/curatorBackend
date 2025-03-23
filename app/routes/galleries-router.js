@@ -10,10 +10,10 @@ const {
 } = require("../controllers/galleries-controller");
 
 galleriesRouter.get("/", getGalleries);
-galleriesRouter.get("/:user_id", getGalleriesByUserId);
+galleriesRouter.get("/user/:user_id", getGalleriesByUserId);
 galleriesRouter.delete("/:gallery_id", deleteGalleryByGalleryId);
-galleriesRouter.delete("/user_id", deleteAllGalleriesByUserId);
-galleriesRouter.post("/:gallery_id", postGallery);
+galleriesRouter.delete("/user/:user_id", deleteAllGalleriesByUserId);
+galleriesRouter.post("/user/:user_id", postGallery);
 galleriesRouter.patch("/:gallery_id/:user_id", patchGallery);
 
 module.exports = galleriesRouter;

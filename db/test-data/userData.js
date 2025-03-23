@@ -19,4 +19,9 @@ module.exports = [
     password: "$1$NOpYkXk5$3OyPpaZj0BeC/DMRWTXpJ/",
     user_name: "Jimmy4",
   },
+  {
+    email: "jimmy5@gmail.com",
+    password: "$1$NOpYkXk5$3OyPpaZj0BeC/DMRWTXpJ/",
+    user_name: "Jimmy5",
+  },
 ];

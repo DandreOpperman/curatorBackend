@@ -50,7 +50,6 @@ exports.removeFavorite = (user_id, favorites_id) => {
   return Promise.all(queryProms);
 };
 exports.removeFavoriteByFavoriteId = (user_id, favorites_id) => {
-  console.log(user_id, "<-u", favorites_id);
   const queryProms = [];
   let queryStr = "DELETE FROM favorites WHERE favorite_id = $1 RETURNING *;";
   queryProms.push(checkValueExists("favorites", "favorite_id", favorites_id));

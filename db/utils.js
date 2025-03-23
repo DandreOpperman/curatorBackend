@@ -51,3 +51,36 @@ exports.checkValueTaken = (table_name, column_name, value, user_id) => {
     }
   });
 };
+exports.checkForItems = (user_id) => {
+  let queryStr = `SELECT items FROM galleries WHERE user_id = $1`;
+  return db.query(queryStr, [user_id]).then((result) => {
+    let hasItems = result.rows.length > 0 ? true : false;
+    let itemsArr = result.rows.map((obj) => {
+      if (obj.items !== null) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+    let realItems = itemsArr.includes(true);
+    return hasItems && realItems > 0;
+  });
+};
+exports.checkIfItemInGallery = (user_id, gallery_id, item) => {
+  let queryStr = `SELECT items FROM galleries WHERE user_id = $1 AND gallery_id = $2`;
+  return db.query(queryStr, [user_id, gallery_id]).then((result) => {
+    console.log(result.rows[0].items, "<--");
+    if (result.rows[0].items === null) {
+      return false;
+    }
+    let itemsArr = result.rows.map((obj) => {
+      console.log({ paramItem: item.name }, { tableItem: obj.items.name });
+      if (obj.items.name === item.name) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+    return itemsArr.includes(true);
+  });
+};

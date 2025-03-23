@@ -1,6 +1,6 @@
 const {
   selectGalleries,
-  selectGalleryByUserId,
+  selectGalleriesByUserId,
   removeGalleryByGalleryId,
   removeAllGalleriesByUserId,
   insertGallery,
@@ -17,16 +17,16 @@ exports.getGalleries = (req, res, next) => {
 
 exports.getGalleriesByUserId = (req, res, next) => {
   const { user_id } = req.params;
-  selectGalleryByUserId(user_id)
-    .then((transaction) => {
-      res.status(200).send({ transaction });
+  selectGalleriesByUserId(user_id)
+    .then((galleries) => {
+      res.status(200).send({ galleries });
     })
     .catch((err) => next(err));
 };
 
 exports.deleteGalleryByGalleryId = (req, res, next) => {
-  const { user_id, gallery_id } = req.params;
-  removeGalleryByGalleryId(user_id, gallery_id)
+  const { gallery_id } = req.params;
+  removeGalleryByGalleryId(gallery_id)
     .then(() => {
       res.status(204).send();
     })
@@ -56,8 +56,8 @@ exports.patchGallery = (req, res, next) => {
   const requestBody = req.body;
   const { user_id, gallery_id } = req.params;
   updateGallery(requestBody, user_id, gallery_id)
-    .then((transaction) => {
-      res.status(200).send({ transaction });
+    .then((gallery) => {
+      res.status(200).send({ gallery });
     })
     .catch((err) => next(err));
 };

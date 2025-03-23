@@ -1,5 +1,9 @@
 const db = require("../../db/connection");
-const { checkValueExists } = require("../../db/utils");
+const {
+  checkValueExists,
+  checkForItems,
+  checkIfItemInGallery,
+} = require("../../db/utils");
 
 exports.selectGalleries = () => {
   return db
@@ -13,56 +17,37 @@ exports.selectGalleries = () => {
 };
 
 exports.selectGalleriesByUserId = (user_id) => {
-  return Promise.all(checkValueExists("users", "user_id", user_id))
+  const checkExists = checkValueExists("users", "user_id", user_id);
+  return checkExists
     .then(() => {
       return db.query(
         `
       SELECT *
       FROM galleries 
       WHERE user_id = $1;`,
-        [user_id, gallery_id]
+        [user_id]
       );
     })
-    .then(({ rows: [gallery] }) => {
-      return gallery;
+    .then(({ rows }) => {
+      return rows;
     });
 };
 
-exports.removeGalleryByGalleryId = (user_id, gallery_id) => {
-  const checkExists = [
-    checkValueExists("galleries", "gallery_id", gallery_id),
-    checkValueExists("users", "user_id", user_id),
-  ];
-  return Promise.all(checkExists).then(() => {
-    return db
-      .query(
-        `
-    SELECT user_id FROM galleries
-    WHERE gallery_id = $1;`,
-        [gallery_id]
-      )
-      .then(({ rows: [owner] }) => {
-        if (owner.user_id !== +user_id) {
-          return Promise.reject({ status: 400, msg: "BAD REQUEST" });
-        }
-      })
-      .then(() => {
-        return db.query(
-          `
+exports.removeGalleryByGalleryId = (gallery_id) => {
+  const checkExists = checkValueExists("galleries", "gallery_id", gallery_id);
+  return checkExists.then(() => {
+    return db.query(
+      `
     DELETE FROM galleries
-    WHERE user_id = $1 AND gallery_id = $2;`,
-          [user_id, gallery_id]
-        );
-      });
+    WHERE gallery_id = $1;`,
+      [gallery_id]
+    );
   });
 };
 
 exports.removeAllGalleriesByUserId = (user_id) => {
-  const checkExists = [
-    checkValueExists("galleries", "gallery_id", gallery_id),
-    checkValueExists("users", "user_id", user_id),
-  ];
-  return Promise.all(checkExists).then(() => {
+  const checkExists = checkValueExists("users", "user_id", user_id);
+  return checkExists.then(() => {
     return db.query(
       `
     DELETE FROM galleries
@@ -99,26 +84,67 @@ exports.updateGallery = (patchBody, user_id, gallery_id) => {
   const checkExists = [
     checkValueExists("galleries", "gallery_id", gallery_id),
     checkValueExists("users", "user_id", user_id),
+    checkIfItemInGallery(user_id, gallery_id, patchBody.items),
   ];
+  let sameItem = false;
+  console.log("here");
   return Promise.all(checkExists)
-    .then(() => {
-      const queryParams = [];
-      const allowedColumns = [image_url, title, description];
-      let count = Object.keys(patchBody).length;
-      let queryStr = "UPDATE galleries SET ";
-      for (const key in patchBody) {
-        if (!allowedColumns.includes(key)) {
-          return Promise.reject({ status: 400, msg: "BAD REQUEST" });
+    .then((res) => {
+      sameItem = res[2];
+      let galleryHasItems = checkForItems(user_id);
+      return galleryHasItems;
+    })
+    .then((galleryHasItems) => {
+      let patchHasItems = patchBody.items ? true : false;
+      let addingToExistingItems = galleryHasItems && patchHasItems;
+      if (addingToExistingItems && sameItem) {
+        let name = patchBody.items.name;
+        let queryStr = `
+      UPDATE galleries
+      SET items = COALESCE((
+        SELECT jsonb_agg(elem)
+        FROM jsonb_array_elements(
+          CASE 
+            WHEN jsonb_typeof(items) = 'array' THEN items 
+            ELSE '[]'::jsonb 
+          END
+        ) elem
+        WHERE elem->>'name' != $3
+      ), '[]'::jsonb)
+      WHERE user_id = $1 AND gallery_id = $2
+      RETURNING *;
+    `;
+        let queryParams = [user_id, gallery_id, name];
+        return db.query(queryStr, queryParams);
+      } else {
+        console.log({ sameItem }, "<---");
+        const allowedColumns = ["image_url", "title", "description", "items"];
+        const queryParams = [user_id, gallery_id];
+        let queryStr = "UPDATE galleries SET ";
+
+        const setClauses = Object.entries(patchBody)
+          .filter(([key]) => allowedColumns.includes(key))
+          .map(([key, value], index) => {
+            if (key === "items" && addingToExistingItems) {
+              console.log({ value });
+              return `${key} = items || '[${JSON.stringify(value)}]'::jsonb `;
+            } else {
+              queryParams.push(value);
+              return `${key} = $${index + 3} `;
+            }
+          });
+
+        if (setClauses.length === 0) {
+          return Promise.reject({
+            status: 400,
+            msg: "BAD REQUEST",
+          });
         }
-        const value = patchBody[key];
-        queryStr += `${key} = $${count + 2}`;
-        queryParams.unshift(value);
-        queryStr += count > 1 ? ", " : " ";
-        count--;
+
+        queryStr += setClauses.join(", ");
+        queryStr += `WHERE user_id = $1 AND gallery_id = $2 RETURNING *;`;
+        return db.query(queryStr, queryParams);
       }
-      queryParams.unshift(user_id, gallery_id);
-      queryStr += `WHERE user_id = $1 AND gallery_id = $2 RETURNING *;`;
-      return db.query(queryStr, queryParams);
     })
     .then(({ rows: [gallery] }) => {
       if (!gallery) {

@@ -239,7 +239,7 @@ describe("/api/user", () => {
       .send(requestBody)
       .then(({ body: { user } }) => {
         expect(user).toMatchObject({
-          user_id: 5,
+          user_id: 6,
           email: "markimoo55@gmail.com",
           password: expect.any(String),
           user_name: "Mark",
@@ -276,7 +276,7 @@ describe("/api/user", () => {
       .send(requestBody)
       .then(({ body: { user } }) => {
         expect(user).toMatchObject({
-          user_id: 5,
+          user_id: 6,
           email: "weemn@gmail.com",
           password: expect.any(String),
           user_name: "halala",
@@ -475,7 +475,7 @@ describe("/api/galleries", () => {
         galleries.map((gallery) => {
           expect(gallery).toMatchObject({
             gallery_id: expect.any(Number),
-            created_at: expect.any(Number),
+            created_at: expect.any(String),
             image_url: expect.any(String),
             title: expect.any(String),
             description: expect.any(String),
@@ -483,5 +483,341 @@ describe("/api/galleries", () => {
           });
         });
       });
+  });
+});
+describe("/api/galleries/user/:user_id", () => {
+  it("GET:200 responds with an array of all of the gallery objects that belong to that user", () => {
+    return request(app)
+      .get("/api/galleries/user/3")
+      .expect(200)
+      .then(({ body: { galleries } }) => {
+        expect(galleries.length).toEqual(2);
+      });
+  });
+  it("GET:400 responds with bad request for an invalid user_id", () => {
+    return request(app)
+      .get("/api/galleries/user/fakeuser")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("BAD REQUEST");
+      });
+  });
+  it("GET:404 responds with not found for a valid but non-existent user_id", () => {
+    return request(app)
+      .get("/api/galleries/user/999999999")
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("NOT FOUND");
+      });
+  });
+  it("GET:200 responds with an empty array for a valid user with no galleries", () => {
+    return request(app)
+      .get("/api/galleries/user/1")
+      .expect(200)
+      .then(({ body: { galleries } }) => {
+        expect(galleries).toEqual([]);
+      });
+  });
+  it("DELETE:204 deletes ALL galleries for a specified user", () => {
+    return request(app)
+      .delete("/api/galleries/user/3")
+      .expect(204)
+      .then(() => {
+        return request(app).get("/api/galleries/user/3").expect(200);
+      })
+      .then(({ body: { galleries } }) => {
+        expect(galleries.length).toEqual(0);
+      });
+  });
+  it("DELETE:204 deletes ALL galleries for a specified user, but not other user's galleries", () => {
+    return request(app)
+      .delete("/api/galleries/user/3")
+      .expect(204)
+      .then(() => {
+        return request(app).get("/api/galleries/user/2").expect(200);
+      })
+      .then(({ body: { galleries } }) => {
+        expect(galleries.length).toEqual(1);
+      });
+  });
+  it("POST:201 adds a gallery to the user's galleries", () => {
+    const requestBody = {
+      image_url: "www.test.com",
+      title: "the hearts of time",
+      description: "hearts through the ages",
+      user_id: 1,
+    };
+    return request(app)
+      .post("/api/galleries/user/1")
+      .send(requestBody)
+      .expect(201)
+      .then(({ body: { gallery } }) => {
+        expect(gallery).toMatchObject({
+          gallery_id: expect.any(Number),
+          image_url: "www.test.com",
+          title: "the hearts of time",
+          description: "hearts through the ages",
+          user_id: 1,
+        });
+      });
+  });
+  it("POST:201 ignore extra data on the request body", () => {
+    const requestBody = {
+      title: "the hearts of time",
+      description: "hearts through the ages",
+      user_id: 1,
+      name: "Coffee",
+      cost: 6.5,
+      image_url: "www.test.com",
+      emotion: "angry, frustrated, caffeinated",
+    };
+    return request(app)
+      .post("/api/galleries/user/1")
+      .send(requestBody)
+      .expect(201)
+      .then(({ body: { gallery } }) => {
+        expect(gallery).toMatchObject({
+          gallery_id: expect.any(Number),
+          image_url: "www.test.com",
+          title: "the hearts of time",
+          description: "hearts through the ages",
+          user_id: 1,
+        });
+      });
+  });
+  it("POST:400 responds with bad request when sending invalid data types", () => {
+    const requestBody = {
+      name: "Magazine",
+      cost: "5 pounds",
+    };
+    return request(app)
+      .post("/api/galleries/user/1")
+      .send(requestBody)
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("BAD REQUEST");
+      });
+  });
+  it("POST:400 responds with bad request for invalid user_id", () => {
+    const requestBody = {
+      title: "the hearts of time",
+      description: "hearts through the ages",
+      user_id: 1,
+    };
+    return request(app)
+      .post("/api/galleries/user/u29")
+      .send(requestBody)
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("BAD REQUEST");
+      });
+  });
+  it("POST:404 responds with not found if user does not exist", () => {
+    const requestBody = {
+      title: "the hearts of time",
+      description: "hearts through the ages",
+      user_id: 1,
+    };
+    return request(app)
+      .post("/api/galleries/user/199")
+      .send(requestBody)
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("NOT FOUND");
+      });
+  });
+});
+describe("/api/galleries/:gallery_id", () => {
+  it("DELETE:204 deletes the gallery related to the specified gallery_id", () => {
+    return request(app)
+      .delete("/api/galleries/3")
+      .expect(204)
+      .then(() => {
+        return request(app).get("/api/galleries/user/2").expect(200);
+      })
+      .then(({ body: { galleries } }) => {
+        expect(galleries).toEqual([]);
+      });
+  });
+  it("DELETE:204 only deletes one of the user's galleries if the user has multiple", () => {
+    return request(app)
+      .delete("/api/galleries/2")
+      .expect(204)
+      .then(() => {
+        return request(app).get("/api/galleries/user/3").expect(200);
+      })
+      .then(({ body: { galleries } }) => {
+        expect(galleries.length).toEqual(1);
+      });
+  });
+  it("DELETE:400 responds with bad request for an invalid user_id", () => {
+    return request(app)
+      .delete("/api/galleries/oooooo1")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("BAD REQUEST");
+      });
+  });
+});
+describe("/api/galleries/:gallery_id/:user_id", () => {
+  it("PATCH:200 updates existing properties on a galleries", () => {
+    const requestBody = {
+      title: "Beauty & Death 1",
+    };
+    return request(app)
+      .patch("/api/galleries/1/3")
+      .send(requestBody)
+      .expect(200)
+      .then(({ body: { gallery } }) => {
+        expect(gallery.title).toEqual("Beauty & Death 1");
+      });
+  });
+  it("PATCH:200 can updates the items list in galleries", () => {
+    const requestBody = {
+      items: {
+        name: "The Starry Night",
+        creator: "Vincent van Gogh",
+        image_url:
+          "https://en.wikipedia.org/wiki/The_Starry_Night#/media/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+        description:
+          "A mesmerizing oil-on-canvas painting depicting a night sky swirling with energy, part of the permanent collection of the Museum of Modern Art in New York City.",
+        year_date: 1889,
+        year_BCE: 0,
+      },
+    };
+    return request(app)
+      .patch("/api/galleries/1/3")
+      .send(requestBody)
+      .expect(200)
+      .then(({ body: { gallery } }) => {
+        expect(gallery.items).toMatchObject({
+          name: "The Starry Night",
+          creator: "Vincent van Gogh",
+          image_url:
+            "https://en.wikipedia.org/wiki/The_Starry_Night#/media/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+          description:
+            "A mesmerizing oil-on-canvas painting depicting a night sky swirling with energy, part of the permanent collection of the Museum of Modern Art in New York City.",
+          year_date: 1889,
+          year_BCE: 0,
+        });
+      });
+  });
+  it("PATCH:200 when PATCH is given a new item it updates items without removing the previouse items", () => {
+    const requestBody = {
+      items: {
+        name: "The Starry Night",
+        creator: "Vincent van Gogh",
+        image_url:
+          "https://en.wikipedia.org/wiki/The_Starry_Night#/media/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+        description:
+          "A mesmerizing oil-on-canvas painting depicting a night sky swirling with energy, part of the permanent collection of the Museum of Modern Art in New York City.",
+        year_date: 1889,
+        year_BCE: 0,
+      },
+    };
+    return request(app)
+      .patch("/api/galleries/4/5")
+      .send(requestBody)
+      .expect(200)
+      .then(({ body: { gallery } }) => {
+        expect(gallery.items).toMatchObject([
+          {
+            name: "The Great Wave off Kanagawa",
+            creator: "Katsushika Hokusai",
+            image_url:
+              "https://en.wikipedia.org/wiki/The_Great_Wave_off_Kanagawa#/media/File:Tsunami_by_hokusai_19th_century.jpg",
+            description:
+              "An iconic woodblock print depicting a massive wave looming over boats, part of several museum collections worldwide, including the Metropolitan Museum of Art in New York.",
+            year_date: 1831,
+            year_BCE: 0,
+          },
+          {
+            name: "The Starry Night",
+            creator: "Vincent van Gogh",
+            image_url:
+              "https://en.wikipedia.org/wiki/The_Starry_Night#/media/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+            description:
+              "A mesmerizing oil-on-canvas painting depicting a night sky swirling with energy, part of the permanent collection of the Museum of Modern Art in New York City.",
+            year_date: 1889,
+            year_BCE: 0,
+          },
+        ]);
+      });
+  });
+  it("PATCH:200 when PATCH is given an item that already exists in the gallery, remove it from that gallery", () => {
+    const requestBody = {
+      items: {
+        name: "The Great Wave off Kanagawa",
+        creator: "Katsushika Hokusai",
+        image_url:
+          "https://en.wikipedia.org/wiki/The_Great_Wave_off_Kanagawa#/media/File:Tsunami_by_hokusai_19th_century.jpg",
+        description:
+          "An iconic woodblock print depicting a massive wave looming over boats, part of several museum collections worldwide, including the Metropolitan Museum of Art in New York.",
+        year_date: 1831,
+        year_BCE: 0,
+      },
+    };
+    return request(app)
+      .patch("/api/galleries/4/5")
+      .send(requestBody)
+      .expect(200)
+      .then(({ body: { gallery } }) => {
+        console.log(gallery, "<---");
+        expect(gallery.items).toMatchObject([]);
+      });
+  });
+  it("PATCH:400 responds with bad request if request property is not greenlisted", () => {
+    const requestBody = {
+      img_url: "smoked_salmon.jpg",
+      cost: 45.0,
+      user_id: 5,
+    };
+    return request(app)
+      .patch("/api/galleries/1/3")
+      .send(requestBody)
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("BAD REQUEST");
+      });
+  });
+  it("PATCH:400 responds with bad request if user/gallery id is invalid", () => {
+    const requestBody = {
+      description: "test description",
+    };
+    const badUserID = request(app)
+      .patch("/api/galleries/$1/3")
+      .send(requestBody)
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("BAD REQUEST");
+      });
+    const badgalleryID = request(app)
+      .patch("/api/galleries/1/kajs")
+      .send(requestBody)
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("BAD REQUEST");
+      });
+    return Promise.all([badUserID, badgalleryID]);
+  });
+  it("PATCH:404 responds with not found if user/gallery id does not exist", () => {
+    const requestBody = {
+      title: "heketoncare",
+    };
+    const notFoundgallery = request(app)
+      .patch("/api/galleries/1/999")
+      .send(requestBody)
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("NOT FOUND");
+      });
+    const notFoundUser = request(app)
+      .patch("/api/galleries/999/3")
+      .send(requestBody)
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("NOT FOUND");
+      });
+    return Promise.all([notFoundgallery, notFoundUser]);
   });
 });
