@@ -32,7 +32,7 @@ const seed = ({ userData, favoriteData, galleryData }) => {
       CREATE TABLE favorites (
         favorite_id SERIAL PRIMARY KEY,
         user_id INT REFERENCES users(user_id) NOT NULL,
-        item_id INT REFERENCES items(item_id) NOT NULL
+        item_id INT
       );`);
     })
     .then(() => {
