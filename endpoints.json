@@ -1,0 +1,177 @@
+{
+  "GET /api": {
+    "description": "serves up a json representation of all the available endpoints of the api"
+  },
+  "GET /api/user/:user_id": {
+    "description": "responds with all of the users data",
+    "queries": [],
+    "exampleResponse": {
+      "user_id": "1)",
+      "email": "jimmy1@gmail.com",
+      "password": "AKFjelifAF38ru2",
+      "user_name": "Jimmy1",
+      "favorites": "[]",
+      "galleries": "[]"
+    }
+  },
+  "PATCH /api/user/:user_id": {
+    "description": "changes the value of a column in the users data in the users table",
+    "queries": [],
+    "exampleInput": { " email": "whopper@gmail.com" },
+    "exampleResponse": {
+      "user_id": 1,
+      "email": "hopper@gmail.com",
+      "password": "AKFjelifAF38ru2",
+      "user_name": "Jimmy1",
+      "favorites": "[]",
+      "galleries": "[]"
+    }
+  },
+  "DELETE /api/user/:user_id": {
+    "description": "deletes user and all of thier data from the tables",
+    "queries": []
+  },
+  "POST /api/user": {
+    "description": "posts a user to the usertable",
+    "exampleInput": {
+      "email": "jimmy1@gmail.com",
+      "password": "AKFjelifAF38ru2",
+      "user_name": "Jimmy1",
+      "favorites": "[]",
+      "galleries": "[]"
+    },
+    "queries": [],
+    "exampleResponse": {
+      "user_id": 1,
+      "email": "jimmy1@gmail.com",
+      "password": "AKFjelifAF38ru2",
+      "user_name": "Jimmy1",
+      "favorites": "[]",
+      "galleries": "[]"
+    }
+  },
+  "GET /api/user/:user_id/favorites": {
+    "description": "gets an array of all of the users favorites",
+    "queries": [],
+    "exampleResponse": [
+      { "favorite_id": 1, "user_id": 1, "item_id": 1 },
+      { "favorite_id": 1, "user_id": 1, "item_id": 2 }
+    ]
+  },
+  "POST /api/user/:user_id/favoritess": {
+    "description": "posts a new favorite to the favorite table",
+    "exampleInput": [{ "favorite_id": 4, "user_id": 1, "item_id": 4 }],
+    "exampleResponse": {
+      "favorites": [{ "favorite_id": 4, "user_id": 1, "item_id": 4 }]
+    }
+  },
+  "DELETE /api/user/:user_id/favorites/:favorites_id": {
+    "description": "deletes a favorite if the user id is correct",
+    "queries": []
+  },
+  "GET /api/galleries": {
+    "description": "gets an array of all of the gallery objects",
+    "queries": [],
+    "exampleResponse": {
+      "article": [
+        {
+          "created_at": "2004-10-19 10:23:54+02",
+          "image_url": "https://defendersblog.org/wp-content/uploads/2022/08/The-Red-Spider-Lily-And-Why-Its-Name-Is-Synonymous-With-Death-1.jpg",
+          "title": "Beauty and Death",
+          "description": "art and history",
+          "user_id": 3
+        },
+        {
+          "created_at": "2004-10-19 10:23:54+02",
+          "image_url": "https://defendersblog.org/wp-content/uploads/2022/08/The-Red-Spider-Lily-And-Why-Its-Name-Is-Synonymous-With-Death-1.jpg",
+          "title": "Beauty and Death",
+          "description": "art and history",
+          "user_id": 3
+        },
+        {
+          "created_at": "2004-10-19 10:23:54+02",
+          "image_url": "https://defendersblog.org/wp-content/uploads/2022/08/The-Red-Spider-Lily-And-Why-Its-Name-Is-Synonymous-With-Death-1.jpg",
+          "title": "Beauty and Death",
+          "description": "art and history",
+          "user_id": 2
+        },
+        {
+          "created_at": "2004-10-19 10:23:54+02",
+          "image_url": "https://defendersblog.org/wp-content/uploads/2022/08/The-Red-Spider-Lily-And-Why-Its-Name-Is-Synonymous-With-Death-1.jpg",
+          " title": "Beauty and Death",
+          "description": "art and history",
+          "user_id": 5,
+          "items": [
+            {
+              "name": "The Great Wave off Kanagawa",
+              "creator": "Katsushika Hokusai",
+              "image_url": "https://en.wikipedia.org/wiki/The_Great_Wave_off_Kanagawa#/media/File:Tsunami_by_hokusai_19th_century.jpg",
+              " description": "An iconic woodblock print depicting a massive wave looming over boats, part of several museum collections worldwide, including the Metropolitan Museum of Art in New York.",
+              " year_date": 1831,
+              "year_BCE": 0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "GET /api/galleries/user/:user_id": {
+    "description": "an array of all of the gallery objects that belong to that user",
+    "queries": [],
+    "exampleResponse": {
+      "article": [
+        {
+          "created_at": "2004-10-19 10:23:54+02",
+          "image_url": "https://defendersblog.org/wp-content/uploads/2022/08/The-Red-Spider-Lily-And-Why-Its-Name-Is-Synonymous-With-Death-1.jpg",
+          "title": "Beauty and Death",
+          "description": "art and history",
+          "user_id": 3
+        },
+        {
+          "created_at": "2004-10-19 10:23:54+02",
+          "image_url": "https://defendersblog.org/wp-content/uploads/2022/08/The-Red-Spider-Lily-And-Why-Its-Name-Is-Synonymous-With-Death-1.jpg",
+          "title": "Beauty and Death",
+          "description": "art and history",
+          "user_id": 3
+        }
+      ]
+    }
+  },
+  "DELETE /api/galleries/user/:user_id": {
+    "description": "deletes all of a users galleries",
+    "queries": []
+  },
+  "POST /api/galleries/user/:user_id": {
+    "description": "posts a gallery to the galleries table",
+    "queries": [],
+    "exampleInput": {
+      "image_url": "www.test.com",
+      "title": "the hearts of time",
+      "description": "hearts through the ages",
+      "user_id": 1
+    },
+    "exampleResponse": {
+      "gallery_id": 4,
+      "image_url": "www.test.com",
+      "title": "the hearts of time",
+      "description": "hearts through the ages",
+      "user_id": 1
+    }
+  },
+  "DELETE /api/galleries/:gallery_id": {
+    "description": "deletes a gallery",
+    "queries": []
+  },
+  "PATCH /api/galleries/:gallery_id/:user_id": {
+    "description": "changes the value of a column in the galleries data in the galleries table if the user_id is the creator of the",
+    "queries": [],
+    "exampleInput": { "title": "Beauty & Death 1" },
+    "exampleResponse": {
+      "gallery_id": 4,
+      "image_url": "www.test.com",
+      "title": "Beauty & Death 1",
+      "description": "hearts through the ages",
+      "user_id": 1
+    }
+  }
+}
