@@ -18,6 +18,7 @@
     "seed": "node ./db/seed/run-seed.js",
     "test": "jest",
     "main": "listen.js",
+    "start": "node listen.js",
     "seed-prod": "NODE_ENV=production npm run seed"
   }
 }
